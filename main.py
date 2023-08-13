@@ -1,30 +1,36 @@
 from turtle import Turtle
 from turtle import Screen
 from tkinter import *
+from tkinter import messagebox
+from datetime import datetime
 from grid import Grid
+import json
+
+
 GREY="#d3d3d3"
 DARK_GREY = "#949494"
 GREEN ="#b7d5ac"
-START_POSITION = (-370,300) #Drone start position
+START_POSITION = (-0,0) #Drone start position
 screen = Screen()
 screen.setup(width=800, height=700)
 screen.title("DRAWING PATH")
+now = datetime.now()
 
-rotate_list=[]
-
-
-
-check_x_list=[False]
-
+check_list=[False]
 tracking_coordinates = [START_POSITION]
-position_coordinates = [(0,0)]
+position_list = []
 
+rotation = ""
+fw_bw = ""
+distance = 0
 
-path_list = [{"rotation":None,"motion": {
-            "fw_bw":None,"distance":()
-            }
-        }
-    ]
+path_list = []
+
+grid = False
+show_grid = None
+
+x_is_on = False
+y_is_on = True
 def rotate_left():
 
     """
@@ -33,8 +39,7 @@ def rotate_left():
     """
 
     t.left(90)
-
-    rotate_list.append("Rotate Left")
+    path_list.append("Rotate Left")
 
 def rotate_right():
 
@@ -42,20 +47,19 @@ def rotate_right():
     It totates 90º the turtle head and store the rotations in a list.
     :return: list with the rotation
     """
-
     t.right(90)
-    rotate_list.append("Rotate Right")
-
+    path_list.append("Rotate Right")
 
 
 
 
 """Initializing start position"""
 t = Turtle()
-#grid = Grid()
-t.pensize(width=3)
+
+t.pensize(width=4)
+t.shapesize(2)
 t.penup()
-t.setheading(270)
+t.setheading(90)
 t.goto(START_POSITION)
 
 start_pos = t.position()
@@ -63,91 +67,131 @@ t.pendown()
 """######################"""
 
 def tracking(coordinates):
+    global path_list
 
-
+    position_dict = {"motion":"","distance":0}
     tracking_coordinates.append(coordinates)
-    distance = (int((abs((tracking_coordinates[-1][0])))-int(abs((tracking_coordinates[-2][0])))) , int((abs((tracking_coordinates[-1][1])))-int(abs((tracking_coordinates[-2][1])))))
+    distance = ((tracking_coordinates[-1][0]))-(tracking_coordinates[-2][0]) , ((tracking_coordinates[-1][1])-(tracking_coordinates[-2][1]))
 
-    position_coordinates.append(distance)
-
-    print("las coordenadas son: ", tracking_coordinates)
-    print("Se ha movido = ", position_coordinates)
-
-
-
-    if tracking_coordinates[-2][0] == tracking_coordinates[-1][0]:
-        print("se mueve en el eje y ")
-
-        if tracking_coordinates[-1][1] < 0:
-            print("me muevo haci alante")
+    if distance[0] == 0: #I'm moving over y coordinate
+        if distance[1] > 0: # I'm moving Forward
+            position_dict["motion"] = "Forward"
+            position_dict["distance"] = distance[1]
+            path_list.append(position_dict)
         else:
-            print("me muevo atras")
-
-
+            position_dict["motion"] = "Backward"
+            position_dict["distance"] = distance[1]
+            path_list.append(position_dict)
     else:
-        print("se mueve en el eje x ")
+        if distance[0] > 0: #I'm Moving left
+            position_dict["motion"] = "Left"
+            position_dict["distance"] = distance[0]
+            path_list.append(position_dict)
 
+        else:
+            position_dict["motion"] = "Right"
+            position_dict["distance"] = distance[0]
+            path_list.append(position_dict)
 
 
 """Button Pressed Logic"""
 def move_on_x():
+    global x_is_on
+
     move_x = True
-    check_x_list.append((move_x))
+    check_list.append((move_x))
 
-
+    if check_list[-1]:
+        button_x.config(bg=GREEN)
+        button_y.config(bg=GREY)
 
 def move_on_y():
+    global y_is_on
     move_x = False
-    check_x_list.append((move_x))
+    check_list.append((move_x))
 
+    if not check_list[-1]:
+        button_y.config(bg=GREEN)
+        button_x.config(bg=GREY)
 
+"""######################################"""
 def mouse_draw(x,y):
 
-    if check_x_list[-1] == True:
+    if check_list[-1] == True:
         t.setx(x)
         tracking(t.pos())
+
     else:
         t.sety(y)
         tracking(t.pos())
 
 def to_restart():
-    global position_coordinates, tracking_coordinates
+    global position_dict, tracking_coordinates,path_list
     t.clear()
     t.penup()
     t.goto(START_POSITION)
     t.pendown()
-    position_coordinates=[(0,0)]
+
     tracking_coordinates=[START_POSITION]
+    path_list = []
+    position_dict = {"motion": "", "distance": 0}
+def make_grid():
+    global grid, show_grid
 
-"""##########################"""
+    if not grid:
+        button_create_grid.configure(bg=GREEN)
+        show_grid=Grid()
+        grid = True
 
-# def mouse_draw(x, y):
-#   global step
-#
-#   t.goto(x, y)
-#   end_pos = (t.position())
-#
-#   print("the end pos is",end_pos)
-#
-#
-#
-#   result = ((end_pos[0]-start_pos[0]),(end_pos[1]-start_pos[1])) #vector
-#   step += 1
-#
-#   path_dict = [{
-#       "step": step,
-#       "result": result }]  # Records Steps and result of each drawn line
-#   path_list.append(path_dict[0])
-#   print(path_list)
-#   t.write(result)
-#
+    else:
+        button_create_grid.configure(bg=DARK_GREY)
+        show_grid.clear_grid()
+        grid = False
+
+def undo():
+    global tracking_coordinates
 
 
+    try:
+        x=tracking_coordinates[-2][0]
+        y=tracking_coordinates[-2][1]
+
+        t.goto(x, y)
+        t.penup()
+        tracking_coordinates.pop()
+        t.pendown()
+        t.pencolor("black")
+
+
+    except IndexError:
+        messagebox.showwarning(title="CAUTION!",message="You cannot go back")
+
+
+def to_export():
+    global path_list
+    yes_no_popup = messagebox.askyesno(title="Export Path", message="Do you want export the drawn path?")
+    messagebox.showinfo(title="Your Path will be exported", message=f"{path_list}")
+
+    date_time = now.strftime("%Y-%m-%d")
+    date_time = date_time.replace("-","_")
+    if yes_no_popup:
+        with open(f"path_list_{date_time}" ,"w") as path_file:
+            json.dump(path_list,path_file)
+
+def actualpos():
+    global tracking_coordinates
+    messagebox.showinfo(title="Actual Position",message=f"{tracking_coordinates[-1]}")
 
 
 
 """Buttons"""
 canvas = screen.getcanvas()
+
+button_create_grid = Button(canvas.master, text="SHOW GRID", command=make_grid, bg=DARK_GREY,font=("Arial", 12, "bold"))
+button_create_grid.pack()
+button_create_grid.place(x=670, y=50)
+
+
 #Right
 button_right = Button(canvas.master, text="Rotate Right", command=rotate_right,bg=GREY)
 button_right.pack()
@@ -161,13 +205,27 @@ button_x = Button(canvas.master, text="X Axis", command=move_on_x, bg=GREY)
 button_x.pack()
 button_x.place(x=670, y=200)
 
-button_y = Button(canvas.master, text="Y Axis", command=move_on_y, bg=GREY)
+button_y = Button(canvas.master, text="Y Axis", command=move_on_y, bg=GREEN)
 button_y.pack()
 button_y.place(x=670, y=250)
 
-button_restart = Button(canvas.master, text="RESTART", command=to_restart, bg=GREY,font=("Arial", 12, "bold"))
+button_undo = Button(canvas.master, text="Undo", command=undo, bg=GREY)
+button_undo.pack()
+button_undo.place(x=670, y=300)
+
+
+button_restart = Button(canvas.master, text="RESTART", command=to_restart, bg=DARK_GREY,font=("Arial", 12, "bold"))
 button_restart.pack()
-button_restart.place(x=670, y=300)
+button_restart.place(x=670, y=450)
+
+button_export_path = Button(canvas.master, text="EXPORT", command=to_export, bg=DARK_GREY,font=("Arial", 12, "bold"))
+button_export_path.pack()
+button_export_path.place(x=670, y=500)
+
+actual_pos= Button(canvas.master, text="Show Pos", command=actualpos, bg=DARK_GREY,font=("Arial", 12, "bold"))
+actual_pos.pack()
+actual_pos.place(x=670, y=370)
+
 
 screen.onclick(mouse_draw,btn=1)
 
