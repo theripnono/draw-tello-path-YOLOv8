@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import messagebox
 from datetime import datetime
 from grid import Grid
+from progressbar import ProgressBarApp
 import json
 
 
@@ -182,7 +183,8 @@ def actualpos():
     global tracking_coordinates
     messagebox.showinfo(title="Actual Position",message=f"{tracking_coordinates[-1]}")
 
-
+def run_drone():
+    ProgressBarApp()
 
 """Buttons"""
 canvas = screen.getcanvas()
@@ -225,6 +227,11 @@ button_export_path.place(x=670, y=500)
 actual_pos= Button(canvas.master, text="Show Pos", command=actualpos, bg=DARK_GREY,font=("Arial", 12, "bold"))
 actual_pos.pack()
 actual_pos.place(x=670, y=370)
+
+
+run_drone = Button(canvas.master, text="START FLAYING", command=run_drone, bg=DARK_GREY,font=("Arial", 12, "bold"))
+run_drone.pack()
+run_drone.place(x=620, y=600)
 
 
 screen.onclick(mouse_draw,btn=1)
