@@ -29,8 +29,8 @@ path_list = []
 grid = False
 show_grid = None
 
-x_is_on = False
-y_is_on = True
+
+
 def rotate_left():
 
     """
@@ -96,7 +96,6 @@ def tracking(coordinates):
 
 """Button Pressed Logic"""
 def move_on_x():
-    global x_is_on
 
     move_x = True
     check_list.append((move_x))
@@ -106,7 +105,7 @@ def move_on_x():
         button_y.config(bg=GREY)
 
 def move_on_y():
-    global y_is_on
+
     move_x = False
     check_list.append((move_x))
 
@@ -148,24 +147,112 @@ def make_grid():
         show_grid.clear_grid()
         grid = False
 
-def undo():
+def movement_mark(coordinate_list):
+
+
+    from_pos = tracking_coordinates[-2]
+    to_pos = tracking_coordinates[-1]
+    moving = to_pos - from_pos
+
+    if moving[0] == 0 and moving[-1]<0:
+        mark = "negative"
+     #moving on y positive axis
+        mark = "positive"
+    elif moving[1] == 0 and moving[-0]<0:
+        mark = "negative"   #moving on x negative axis
+    elif moving[1] == 0 and moving[-0]>0: #moving on x positive axis
+        mark = "positive"
+    print(moving)
+    return mark
+
+def erase():
     global tracking_coordinates
-
-
+    """
+    Erase the drawn line
+    """
     try:
-        x=tracking_coordinates[-2][0]
-        y=tracking_coordinates[-2][1]
-
+        x = tracking_coordinates[-2][0]
+        y = tracking_coordinates[-2][1]
+        t.pendown()
+        t.pencolor("white")
         t.goto(x, y)
-        t.penup()
         tracking_coordinates.pop()
         t.pendown()
         t.pencolor("black")
+    except IndexError:
+        messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
+def last_pos():
+    global tracking_coordinates
+    try:
+        x = tracking_coordinates[-2][0]
+        y = tracking_coordinates[-2][1]
+        t.goto(x, y)
+        tracking_coordinates.pop()
+        t.pendown()
+    except IndexError:
+        messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
+def undo():
+    global tracking_coordinates, check_list
+
+    try:
+        tracking_coordinates = tracking_coordinates
+        from_pos = tracking_coordinates[-2]
+        to_pos = tracking_coordinates[-1]
+        moving = to_pos - from_pos
+
+        if moving[0] == 0 and moving[-1] > 0 :  # moving on y positive axis
+            if tracking_coordinates[-1][-1] > 0: #checking if positive
+                if tracking_coordinates[-2][-1] < tracking_coordinates[-1][-1]:
+                   erase()
+                else:
+                    last_pos()
+            else:
+                if tracking_coordinates[-2][-1] > tracking_coordinates[-1][-1]:
+                    erase()
+                else:
+                    last_pos()
+
+        elif moving[0] == 0 and moving[-1] < 0:  # moving on y negative axis
+            if tracking_coordinates[-1][-1] < 0:  # checking if negative
+                if tracking_coordinates[-2][-1] > tracking_coordinates[-1][-1]:
+                    erase()
+                else:
+                    last_pos()
+            else:
+                if tracking_coordinates[-2][-1] > tracking_coordinates[-1][-1]:
+                    last_pos()
+
+                else:
+                    erase()
+
+        elif moving[1] == 0 and moving[0] > 0: # moving on x positive axis
+            if tracking_coordinates[-1][0] > 0:  # checking if positive
+                if tracking_coordinates[-2][0] < tracking_coordinates[-1][0]:
+                    erase()
+                else:
+                    last_pos()
+            else:
+                if tracking_coordinates[-2][0] > tracking_coordinates[-1][0]:
+                    erase()
+                else:
+                    last_pos()
+
+        elif moving[1] == 0 and moving[0] < 0: # moving on x negative axis
+            if tracking_coordinates[-1][0] < 0:  # checking if negative
+                if tracking_coordinates[-2][0] > tracking_coordinates[-1][0]:
+                    erase()
+                else:
+                    last_pos()
+            else:
+                if tracking_coordinates[-2][0] > tracking_coordinates[-1][0]:
+                    last_pos()
+
+                else:
+                    erase()
 
 
     except IndexError:
-        messagebox.showwarning(title="CAUTION!",message="You cannot go back")
-
+        messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
 
 def to_export():
     global path_list
@@ -180,8 +267,13 @@ def to_export():
 
 def actualpos():
     global tracking_coordinates
-    messagebox.showinfo(title="Actual Position",message=f"{tracking_coordinates[-1]}")
-
+    # messagebox.showinfo(title="Actual Position",message=f"{tracking_coordinates[-1]}")
+    tracking_coordinates = tracking_coordinates
+    from_pos = tracking_coordinates[-2]
+    to_pos = tracking_coordinates[-1]
+    moving = to_pos - from_pos
+    print(moving)
+    print(tracking_coordinates)
 
 
 """Buttons"""
