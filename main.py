@@ -84,12 +84,12 @@ def tracking(coordinates):
             path_list.append(position_dict)
     else:
         if distance[0] > 0: #I'm Moving left
-            position_dict["motion"] = "Left"
+            position_dict["motion"] = "Right"
             position_dict["distance"] = distance[0]
             path_list.append(position_dict)
 
         else:
-            position_dict["motion"] = "Right"
+            position_dict["motion"] = "Left"
             position_dict["distance"] = distance[0]
             path_list.append(position_dict)
 
@@ -147,23 +147,6 @@ def make_grid():
         show_grid.clear_grid()
         grid = False
 
-def movement_mark(coordinate_list):
-
-
-    from_pos = tracking_coordinates[-2]
-    to_pos = tracking_coordinates[-1]
-    moving = to_pos - from_pos
-
-    if moving[0] == 0 and moving[-1]<0:
-        mark = "negative"
-     #moving on y positive axis
-        mark = "positive"
-    elif moving[1] == 0 and moving[-0]<0:
-        mark = "negative"   #moving on x negative axis
-    elif moving[1] == 0 and moving[-0]>0: #moving on x positive axis
-        mark = "positive"
-    print(moving)
-    return mark
 
 def erase():
     global tracking_coordinates
@@ -266,14 +249,10 @@ def to_export():
             json.dump(path_list,path_file)
 
 def actualpos():
-    global tracking_coordinates
+    global tracking_coordinates,path_list
     # messagebox.showinfo(title="Actual Position",message=f"{tracking_coordinates[-1]}")
-    tracking_coordinates = tracking_coordinates
-    from_pos = tracking_coordinates[-2]
-    to_pos = tracking_coordinates[-1]
-    moving = to_pos - from_pos
-    print(moving)
-    print(tracking_coordinates)
+    messagebox.showinfo(title="Actual Position", message=f"{path_list}")
+
 
 
 """Buttons"""
