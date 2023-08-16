@@ -28,30 +28,7 @@ path_list = []
 
 grid = False
 show_grid = None
-
-
-
-def rotate_left():
-
-    """
-    It totates 90º the turtle head and store the rotations in a list.
-    :return: list with the rotation
-    """
-
-    t.left(90)
-    path_list.append("Rotate Left")
-
-def rotate_right():
-
-    """
-    It totates 90º the turtle head and store the rotations in a list.
-    :return: list with the rotation
-    """
-    t.right(90)
-    path_list.append("Rotate Right")
-
-
-
+count_rotation = 0
 
 """Initializing start position"""
 t = Turtle()
@@ -67,36 +44,135 @@ t.pendown()
 """######################"""
 
 def tracking(coordinates):
-    global path_list
+    global path_list, count_rotation
 
     position_dict = {"motion":"","distance":0}
     tracking_coordinates.append(coordinates)
     distance = ((tracking_coordinates[-1][0]))-(tracking_coordinates[-2][0]) , ((tracking_coordinates[-1][1])-(tracking_coordinates[-2][1]))
 
-    if distance[0] == 0: #I'm moving over y coordinate
-        if distance[1] > 0: # I'm moving Forward
-            position_dict["motion"] = "Forward"
-            position_dict["distance"] = distance[1]
-            path_list.append(position_dict)
-        else:
-            position_dict["motion"] = "Backward"
-            position_dict["distance"] = distance[1]
-            path_list.append(position_dict)
-    else:
-        if distance[0] > 0: #I'm Moving left
-            position_dict["motion"] = "Right"
-            position_dict["distance"] = distance[0]
-            path_list.append(position_dict)
+    """
+    if the arrow rotate it means the drone will rotate so the cardinal axis change.
+    Positive rotation count when right click is pressed, negative count when left click is pressed
+    """
+    if count_rotation == 0: # standard cardinal axis. 4 when the cardinal rotate 4 times left
+        if distance[0] == 0 : #I'm moving over y coordinate
+            if distance[1] > 0: # I'm moving Forward
+                position_dict["motion"] = "Forward"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Backward"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+        elif distance[0] != 0:
+            if distance[0] > 0: #I'm Moving left
+                position_dict["motion"] = "Right"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Left"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
 
-        else:
-            position_dict["motion"] = "Left"
-            position_dict["distance"] = distance[0]
-            path_list.append(position_dict)
+    elif count_rotation == 1 or count_rotation == -3:
+
+        """
+        Cardinal axis have change it because the drone it has rotated
+               -x 
+                |
+                |
+        -y------------> y
+                |
+                |
+                v
+                x 
+        """
+        if distance[0] == 0: # Now; Y axis is -X and so on
+            if distance[1] > 0 :
+                position_dict["motion"] = "Left"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Right"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+
+        elif distance[0] != 0:
+            if distance[0] > 0:  # I'm Moving left
+                position_dict["motion"] = "Forward"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Backward"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
 
 
+
+    elif count_rotation == 2 or count_rotation == -2:
+        """
+              -y 
+                |
+                |
+        x <----------- x
+                |
+                |
+                v
+              y 
+        """
+        if distance[0] == 0:
+            if distance[1] > 0 :
+                position_dict["motion"] = "Backward"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Forward"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+
+        elif distance[0] != 0:
+            if distance[0] > 0:
+                position_dict["motion"] = "Left"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Right"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
+
+    elif count_rotation == 3 or count_rotation == -1:
+        """
+              x 
+                ^
+                |
+                |
+        y <----------- -y
+                |
+                |
+                
+              -x 
+        """
+        if distance[0] == 0:
+            if distance[1] > 0 :
+                position_dict["motion"] = "Right"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Left"
+                position_dict["distance"] = distance[1]
+                path_list.append(position_dict)
+        elif distance[0] != 0:
+            if distance[0] > 0:
+                position_dict["motion"] = "Backward"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
+            else:
+                position_dict["motion"] = "Forward"
+                position_dict["distance"] = distance[0]
+                path_list.append(position_dict)
 """Button Pressed Logic"""
 def move_on_x():
-
+    global path_list
     move_x = True
     check_list.append((move_x))
 
@@ -104,7 +180,11 @@ def move_on_x():
         button_x.config(bg=GREEN)
         button_y.config(bg=GREY)
 
+
+
+
 def move_on_y():
+    global path_list
 
     move_x = False
     check_list.append((move_x))
@@ -112,6 +192,35 @@ def move_on_y():
     if not check_list[-1]:
         button_y.config(bg=GREEN)
         button_x.config(bg=GREY)
+
+
+def rotate_left():
+    global count_rotation
+    """
+    It totates 90º the turtle head and store the rotations in a list.
+    :return: list with the rotation
+    """
+    if button_left:
+        t.left(90)
+        path_list.append("rotate_left")
+        count_rotation -=1
+        if count_rotation < -3:
+            count_rotation = 0
+        return count_rotation
+
+def rotate_right():
+    global count_rotation
+    """
+    It totates 90º the turtle head and store the rotations in a list.
+    :return: list with the rotation
+    """
+    if button_right:
+        t.right(90)
+        path_list.append("rotate_right")
+        count_rotation +=1
+        if count_rotation > 3:
+            count_rotation = 0
+        return count_rotation
 
 """######################################"""
 def mouse_draw(x,y):
@@ -124,11 +233,14 @@ def mouse_draw(x,y):
         t.sety(y)
         tracking(t.pos())
 
+
 def to_restart():
     global position_dict, tracking_coordinates,path_list
     t.clear()
     t.penup()
     t.goto(START_POSITION)
+    t.home()
+    t.left(90)
     t.pendown()
 
     tracking_coordinates=[START_POSITION]
@@ -147,9 +259,8 @@ def make_grid():
         show_grid.clear_grid()
         grid = False
 
-
 def erase():
-    global tracking_coordinates
+    global tracking_coordinates,path_list
     """
     Erase the drawn line
     """
@@ -160,17 +271,19 @@ def erase():
         t.pencolor("white")
         t.goto(x, y)
         tracking_coordinates.pop()
+        path_list = path_list[:-1] #update the dictionary list discart the last dictonary
         t.pendown()
         t.pencolor("black")
     except IndexError:
         messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
 def last_pos():
-    global tracking_coordinates
+    global tracking_coordinates,path_list
     try:
         x = tracking_coordinates[-2][0]
         y = tracking_coordinates[-2][1]
         t.goto(x, y)
         tracking_coordinates.pop()
+        path_list = path_list[:-1]  # update the dictionary list discart the last dictonary
         t.pendown()
     except IndexError:
         messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
