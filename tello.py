@@ -1,165 +1,112 @@
+from turtle import Turtle, Screen
+import time,math
 from djitellopy import Tello
-import cv2
-import json
-import pygame
-import numpy as np
-import time
-
-"""This code is based on DJITelloPy/examples/manual-control-pygame.py"""
-S = 60
-FPS = 120
 
 
-class FrontEnd(object):
+"""
+********************************** INFORMATION ************************************************************************
+According to the drone's docs, the speed is 10 cm/s.
 
-    def __init__(self):
-        self.read_path(path="path_list_2023_08_13", read="r")
-        pygame.init()
-        pygame.display.set_caption("Tello video stream")
-        self.screen = pygame.display.set_mode([800, 700])
-        self.tello = Tello()
+The given distance is in pixels, so we can create a conversion rate. For this case:
 
-        # Drone velocities between -100~100
-        self.for_back_velocity = 0
-        self.left_right_velocity = 0
-        self.up_down_velocity = 0
-        self.yaw_velocity = 0
-        self.speed = 10
+If the distance is 100 pixeles the given speed to the drone will be 50 cm/s. 
 
-        self.send_rc_control = False
+Each iteration will have a time.sleep(seg) to wait the other instruction be done.
+So the drone will travelled and the following instruction will not be given. 
 
-        # create update timer
+More than 7 seconds with no commands, lands the drone.
 
-        pygame.time.set_timer(pygame.USEREVENT + 1, 1000 // FPS)
+NOTE: the real scale between px and cm is: 1cm -> 37,78 px
+*********************************************************************************************************************"""
 
-    def read_path(self, path: str, read: str):
-        """
-        Get de Json exported file data
-        :param path: the path where is exported the json file
-        :param read: read mode
-        :return: It returns a list of dictionaries
-        """
-        with open(path, read) as read_json:
-            data = json.load(read_json)
-            return data
 
-    def distance_converter(self):
 
-    def run(self):
 
-        self.tello.connect()
-        self.tello.set_speed(self.speed)
+# Given Path
+example_path = [{"motion": "Forward", "distance": 200}, 'rotate_left',
+                {"motion": "Left", "distance": -50}, 'rotate_right',
+                {"motion": "Backward", "distance": 50},
+                {"motion":"rotate_left", "rotation": -90}]
 
-        # In case streaming is on. This happens when we quit this program without the escape key.
-        # 防止视频流已开启。这会在不使用ESC键退出的情况下发生。
-        self.tello.streamoff()
-        self.tello.streamon()
 
-        frame_read = self.tello.get_frame_read()
 
-        should_stop = False
-        while not should_stop:
+#tello = Tello()
 
-            for event in pygame.event.get():
-                if event.type == pygame.USEREVENT + 1:
-                    self.update()
-                elif event.type == pygame.QUIT:
-                    should_stop = True
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        should_stop = True
-                    else:
-                        self.keydown(event.key)
-                elif event.type == pygame.KEYUP:
-                    self.keyup(event.key)
+ratio = 0.5  # This ratio can be change according your needs
 
-            if frame_read.stopped:
-                break
 
-            self.screen.fill([0, 0, 0])
+def pixels_to_cm(distance_px):
 
-            frame = frame_read.frame
-            # battery n. 电池
-            text = "Battery: {}%".format(self.tello.get_battery())
-            cv2.putText(frame, text, (5, 720 - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = np.rot90(frame)
-            frame = np.flipud(frame)
+    """ 100px = 50cm """
 
-            frame = pygame.surfarray.make_surface(frame)
-            self.screen.blit(frame, (0, 0))
-            pygame.display.update()
+    distance_cm = math.ceil(distance_px * ratio)
 
-            time.sleep(1 / FPS)
+    return distance_cm
 
-        # Call it always before finishing. To deallocate resources.
-        # 通常在结束前调用它以释放资源
-        self.tello.end()
 
-    def keydown(self, key):
-        """ Update velocities based on key pressed
-        Arguments:
-            key: pygame key
+def set_seconds(distance_cm):
 
-        基于键的按下上传各个方向的速度
-        参数：
-            key：pygame事件循环中的键事件
-        """
-        if key == pygame.K_UP:  # set forward velocity
-            self.for_back_velocity = S
-        elif key == pygame.K_DOWN:  # set backward velocity
-            self.for_back_velocity = -S
-        elif key == pygame.K_LEFT:  # set left velocity
-            self.left_right_velocity = -S
-        elif key == pygame.K_RIGHT:  # set right velocity
-            self.left_right_velocity = S
-        elif key == pygame.K_w:  # set up velocity
-            self.up_down_velocity = S
-        elif key == pygame.K_s:  # set down velocity
-            self.up_down_velocity = -S
-        elif key == pygame.K_a:  # set yaw counter clockwise velocity
-            self.yaw_velocity = -S
-        elif key == pygame.K_d:  # set yaw clockwise velocity
-            self.yaw_velocity = S
+    """moves 10cm in 1 seg"""
 
-    def keyup(self, key):
-        """ Update velocities based on key released
-        Arguments:
-            key: pygame key
+    seg = abs(math.ceil(distance_cm / 10))
 
-        基于键的松开上传各个方向的速度
-        参数：
-            key：pygame事件循环中的键事件
-        """
-        if key == pygame.K_UP or key == pygame.K_DOWN:  # set zero forward/backward velocity
-            self.for_back_velocity = 0
-        elif key == pygame.K_LEFT or key == pygame.K_RIGHT:  # set zero left/right velocity
-            self.left_right_velocity = 0
-        elif key == pygame.K_w or key == pygame.K_s:  # set zero up/down velocity
-            self.up_down_velocity = 0
-        elif key == pygame.K_a or key == pygame.K_d:  # set zero yaw velocity
-            self.yaw_velocity = 0
-        elif key == pygame.K_t:  # takeoff
-            self.tello.takeoff()
-            self.send_rc_control = True
-        elif key == pygame.K_l:  # land
-            not self.tello.land()
-            self.send_rc_control = False
+    return seg
 
-    def update(self):
-        """ Update routine. Send velocities to Tello.
 
-            向Tello发送各方向速度信息
-        """
-        if self.send_rc_control:
-            self.tello.send_rc_control(self.left_right_velocity, self.for_back_velocity,
-                                       self.up_down_velocity, self.yaw_velocity)
+def path_to_commands(path):
+    rotation_speed = 90
+    fb, lr, yd = 0, 0, 0
+    for item in path:
+        if isinstance(item, dict):
+            if item["motion"] == "Forward":
+                fb = pixels_to_cm(item["distance"])
+            elif item["motion"] == "Backward":
+                fb = pixels_to_cm(item["distance"])
+
+            elif item["motion"] == "Left":
+                lr = pixels_to_cm(item["distance"])
+            elif item["motion"] == "Right":
+                lr = pixels_to_cm(item["distance"])
+
+        elif isinstance(item, str):
+            if item == "rotate_right":
+                yd = rotation_speed
+            elif item == "rotate_left":
+                yd = -rotation_speed
+        example_path.pop(0)
+        return [fb, lr, yd]
 
 
 def main():
-    frontend = FrontEnd()
+    turtle = Turtle()
+    turtle.shapesize(2)
+    turtle.left(90)
 
-    # run frontend
+    screen = Screen()
+    screen.setup(width=800, height=700)
+    screen.tracer(0)
 
-    frontend.run()
+    #tello.connect()
+    #tello.takeoff()
+
+    in_flying = True
+
+    while in_flying:
+
+        try:
+            values = path_to_commands(example_path)
+            print(values[0], values[1], values[2])
+            #tello.send_rc_control(forward_backward_velocity=values[0], left_right_velocity=values[1],
+            #                      yaw_velocity=values[2], up_down_velocity=0)
+            time.sleep(2)
+
+            screen.update()
+
+        except TypeError:
+            pass
+            #tello.land()
+
+    screen.exitonclick()
+
+
+main()
