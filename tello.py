@@ -1,8 +1,9 @@
-import turtle
+import cv2
 from turtle import Turtle, Screen
 from djitellopy import Tello
 from time import sleep
 from threading import Thread
+
 
 """
 ********************************** INFORMATION ************************************************************************
@@ -14,149 +15,168 @@ Each iteration will have a time.sleep(seg) to wait the instruction be done.
 
 *********************************************************************************************************************"""
 
-# Given Path
-example_path = [{"motion": "forward", "distance": 184.0},
-                {"motion": "rotate_right", "distance": 90},
-                {"motion": "backward", "distance": -186.0},
-                {"motion": "rotate_right", "distance": 90},
-                {"motion": "forward", "distance": -323.0},
 
-                [[0, 184.0], [-186.0, 184.0], [-186.0, -139.0]]
-                ]
+class Fly(Turtle):
 
-tello = Tello()
+    def __init__(self, exported_path):
+        super().__init__()
 
-
-def draw_turtle(coordinates_list):
-
-    coordinates_list = coordinates_list[-1]
-
-    for l in coordinates_list:
-        x = l[0]
-        y = l[1]
-        coordinates_list.pop(0)
-        return x, y
+        #self.Screen()
+        #self.setup(width=800, height=700)
+        self.shapesize(2)
+        self.left(90)
 
 
+        # Given Path
+        #self.tello = Tello()
+        #self.tello.connect()
 
-def to_travel(dist_px):
+
+        # recorder = Thread(target=video_recorder, daemon=True)
+        # recorder.start()
+
+        self.path = exported_path
+
+        self.path_to_commands(self.path)
+
+    def draw_turtle(self, coordinates_list):
+
+        coordinates_list = coordinates_list[-1]
+
+        for l in coordinates_list:
+            x = l[0]
+            y = l[1]
+            coordinates_list.pop(0)
+            return x, y
+
+
+    def to_travel(self, dist_px):
+        """
+        speed = 15cm/s
+        1px -> 1 cm si le mando 100px me devolverá 50 cm
+        speed = 20cm -> 1s
+
+        return the seconds that  will be used to know the time interval between commands.
 
     """
-    speed = 15cm/s
-    1px -> 1 cm si le mando 100px me devolverá 50 cm
-    speed = 20cm -> 1s
 
-    return the seconds that  will be used to know the time interval between commands.
+        if dist_px < 0:
 
-    """
+            cm = abs(dist_px)
 
-    if dist_px < 0:
+        elif dist_px > 100:  # I put this max value because testing at home. Outside max value = 500
 
-        cm = abs(dist_px)
+            cm = 100
 
-    elif dist_px > 500:
+        else:
+            cm = dist_px
 
-        cm = 500
-    else:
-        cm = dist_px
-
-    return round((cm / 15), 2)
+        return round((cm / 15), 2)
 
 
-def path_to_commands(path):
+    def path_to_commands(self,full_path):
 
-    speed = 20
+        #self.tello.takeoff()
 
-    turtle.shapesize(2)
-    turtle.left(90)
+        speed = 20
 
-    path = example_path[:-1]
+        path = full_path[:-1]
 
-    for item in path:
+        for item in path:
 
-        if item["motion"] == "forward":
+            if item["motion"] == "forward":
 
-            seconds = to_travel(item["distance"])
+                seconds = self.to_travel(item["distance"])
 
-            #tello.send_rc_control(0, speed, 0, 0)
+                # self.tello.send_rc_control(0, speed, 0, 0)
 
-            print("SENCONDS: ############", seconds)
-            sleep(seconds)
+                print("SENCONDS: ############", seconds)
+                sleep(seconds)
 
-        elif item["motion"] == "backward":
+            elif item["motion"] == "backward":
 
-            seconds = to_travel(item["distance"])
+                seconds = self.to_travel(item["distance"])
 
-            #tello.send_rc_control(0, -speed, 0, 0)
+                # self.tello.send_rc_control(0, -speed, 0, 0)
 
-            print("SENCONDS: ############", seconds)
-            sleep(seconds)
+                print("SENCONDS: ############", seconds)
+                sleep(seconds)
 
-        elif item["motion"] == "left":
+            elif item["motion"] == "left":
 
-            seconds = to_travel(item["distance"])
+                seconds = self.to_travel(item["distance"])
 
-            #tello.send_rc_control(speed, 0, 0, 0)
+                # self.tello.send_rc_control(speed, 0, 0, 0)
 
-            print("SENCONDS: ############", seconds)
-            sleep(seconds)
+                print("SENCONDS: ############", seconds)
+                sleep(seconds)
 
-        elif item["motion"] == "right":
+            elif item["motion"] == "right":
 
-            seconds = to_travel(item["distance"])
+                seconds = self.to_travel(item["distance"])
 
-            #tello.send_rc_control(-speed, 0, 0, 0)
+                # self.tello.send_rc_control(-speed, 0, 0, 0)
 
-            print("SENCONDS: ############", seconds)
-            sleep(seconds)
+                print("SENCONDS: ############", seconds)
+                sleep(seconds)
 
-        elif item["motion"] == "rotate_right":
+            elif item["motion"] == "rotate_right":
 
-            yw = 90
-            seconds = 1
+                yw = 90
+                seconds = 1
 
-            #tello.send_rc_control(0, 0, 0, yw)
+                # self.tello.send_rc_control(0, 0, 0, yw)
 
-            print("SENCONDS: ############", seconds)
-            turtle.right(90)
-            sleep(seconds)
+                print("SENCONDS: ############", seconds)
+                self.right(90)
+                sleep(seconds)
 
-        elif item["motion"] == "rotate_left":
+            elif item["motion"] == "rotate_left":
 
-            yw = 90
-            seconds = 1
+                yw = 90
+                seconds = 1
 
-            #tello.send_rc_control(0, 0, 0, yw)
-            print("SENCONDS: ############", seconds)
-            turtle.left(90)
-            sleep(seconds)  # As it is in other thread it keeps flying
+                # tello.send_rc_control(0, 0, 0, yw)
+                print("SENCONDS: ############", seconds)
+                self.left(90)
+                sleep(seconds)  # As it is in other thread it keeps flying
 
-        #tello.send_rc_control(0, 0, 0, 0)
+            # tello.send_rc_control(0, 0, 0, 0)
 
-        try:
+            try:
 
-            x, y = draw_turtle(example_path)
-            turtle.goto(x, y)
-        except TypeError:
-            pass
-        
-    print("LAND")
+                x, y = self.draw_turtle(self.path)
+                self.goto(x, y)
+            except TypeError:
+                pass
 
-    #tello.land()
+        print("*************** LAND ********************")
 
-def main():
-    screen = Screen()
-    screen.setup(width=800, height=700)
+        #self.tello.land()
+        #self.tello.streamoff()
+        #self.exitonclick()
 
-    # screen.tracer(0)
+    def video_recorder(self):
 
-    #tello.connect()
-    #tello.takeoff()
+        keep_recording = True
 
-    path_to_commands(example_path)
+        #self.tello.streamon()
 
-    screen.exitonclick()
+        while keep_recording:
+
+            frame_read = self.tello.get_frame_read().frame
+            frame_read = cv2.resize(frame_read, (640, 640))
+
+            cv2.imshow("drone", frame_read)
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
 
-main()
-#tello.land()
+
+
+
+
+
+
+

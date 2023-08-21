@@ -5,13 +5,25 @@ from tkinter import messagebox
 from datetime import datetime
 from grid import Grid
 import json
+from tello import Fly
 
 GREY = "#d3d3d3"
 DARK_GREY = "#949494"
 GREEN = "#b7d5ac"
 START_POSITION = (-0, 0)  # Drone start position
+
+
+"""Screen setup"""
+
+BGPIC ="images/floorplans.gif"
+DRON_ICON = "/images/drone_icon.png"
+
 screen = Screen()
 screen.setup(width=800, height=700)
+screen.bgpic(BGPIC)
+
+# Or, set the shape of a turtle
+
 screen.title("DRAWING PATH")
 now = datetime.now()
 
@@ -31,7 +43,7 @@ count_rotation = 0
 
 """Initializing start position"""
 t = Turtle()
-
+#t.shape(DRON_ICON)
 t.pensize(width=4)
 t.shapesize(2)
 t.penup()
@@ -382,6 +394,14 @@ def actualpos():
     messagebox.showinfo(title="Travelled Coordinates", message=f"{tracking_coordinates}")
 
 
+def to_fly():
+    t.reset()
+    t.hideturtle()
+    with open('path_list_2023_08_20', 'r') as json_file:
+        path = json.loads(json_file.read())
+
+    Fly(path)
+
 """Buttons"""
 canvas = screen.getcanvas()
 
@@ -411,6 +431,10 @@ button_undo = Button(canvas.master, text="Undo", command=undo, bg=GREY)
 button_undo.pack()
 button_undo.place(x=670, y=300)
 
+actual_pos = Button(canvas.master, text="Show Pos", command=actualpos, bg=DARK_GREY, font=("Arial", 12, "bold"))
+actual_pos.pack()
+actual_pos.place(x=670, y=370)
+
 button_restart = Button(canvas.master, text="RESTART", command=to_restart, bg=DARK_GREY, font=("Arial", 12, "bold"))
 button_restart.pack()
 button_restart.place(x=670, y=450)
@@ -419,9 +443,10 @@ button_export_path = Button(canvas.master, text="EXPORT", command=to_export, bg=
 button_export_path.pack()
 button_export_path.place(x=670, y=500)
 
-actual_pos = Button(canvas.master, text="Show Pos", command=actualpos, bg=DARK_GREY, font=("Arial", 12, "bold"))
-actual_pos.pack()
-actual_pos.place(x=670, y=370)
+
+start_flying = Button(canvas.master, text="START FLYING", command=to_fly, bg=DARK_GREY, font=("Arial", 12, "bold"))
+start_flying.pack()
+start_flying.place(x=670, y=600)
 
 screen.onclick(mouse_draw, btn=1)
 
