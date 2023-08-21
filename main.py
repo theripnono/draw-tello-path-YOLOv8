@@ -7,6 +7,8 @@ from grid import Grid
 import json
 from tello import Fly
 
+
+
 GREY = "#d3d3d3"
 DARK_GREY = "#949494"
 GREEN = "#b7d5ac"
@@ -41,6 +43,7 @@ grid = False
 show_grid = None
 count_rotation = 0
 
+
 """Initializing start position"""
 t = Turtle()
 #t.shape(DRON_ICON)
@@ -54,6 +57,9 @@ start_pos = t.position()
 t.pendown()
 """######################"""
 
+path=None
+
+fly=Fly(path)
 
 def tracking(coordinates):
     global path_list, count_rotation
@@ -395,12 +401,16 @@ def actualpos():
 
 
 def to_fly():
+    global path
     t.reset()
     t.hideturtle()
     with open('path_list_2023_08_20', 'r') as json_file:
         path = json.loads(json_file.read())
 
-    Fly(path)
+    start_flying = True
+
+    fly.start_flying(start_flying, path)
+
 
 """Buttons"""
 canvas = screen.getcanvas()
@@ -443,10 +453,13 @@ button_export_path = Button(canvas.master, text="EXPORT", command=to_export, bg=
 button_export_path.pack()
 button_export_path.place(x=670, y=500)
 
-
 start_flying = Button(canvas.master, text="START FLYING", command=to_fly, bg=DARK_GREY, font=("Arial", 12, "bold"))
 start_flying.pack()
 start_flying.place(x=670, y=600)
+
+abort_mission = Button(canvas.master, text="EMERGENCY", command=fly.abort_mission, bg=DARK_GREY, font=("Arial", 12, "bold"))
+abort_mission.pack()
+abort_mission.place(x=350, y=620)
 
 screen.onclick(mouse_draw, btn=1)
 
