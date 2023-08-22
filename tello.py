@@ -23,25 +23,29 @@ class Fly(Turtle):
 
         self.hideturtle()
 
-
         self.start = False
-        self.path = exported_path
 
-        self.start_flying(self.start, self.path)
-
-        self.tello = Tello()
-        # self.tello.connect()
         self.keep_recording = True
 
+        self.exported_path = exported_path
+
+        self.tello = Tello()
+
+
     def start_flying(self, start, path):
+
         if start:
+
+            self.tello.connect()
+
             self.showturtle()
             self.shapesize(2)
             self.left(90)
-            #recorder = Thread(target=self.video_recorder, daemon=True)
-            #recorder.start()
 
-            #sleep(2)  # wait to initialize the video_recorder
+            recorder = Thread(target=self.video_recorder, daemon=True)
+            recorder.start()
+
+
 
             self.path_to_commands(path)
 
@@ -65,12 +69,11 @@ class Fly(Turtle):
         """
 
         if dist_px < 0:
+            if dist_px < -100:  # I put this condition min value because testing at home. Outside max value is -500
 
-            cm = abs(dist_px)
-
-        elif dist_px > -100:  # I put this min value because testing at home. Outside max value is 500
-
-            cm = 50
+                cm = 50
+            else:
+                cm = abs(dist_px)
 
         elif dist_px > 100:  # I put this max value because testing at home. Outside max value is 500
 
@@ -84,6 +87,8 @@ class Fly(Turtle):
 
     def path_to_commands(self,full_path):
 
+        print("******** START THE PATH ********")
+        sleep(2)  # wait to initialize the video_recorder
         #self.tello.takeoff()
 
         speed = 20
@@ -144,12 +149,12 @@ class Fly(Turtle):
                 yw = 90
                 seconds = 1
 
-                #self.tello.send_rc_control(0, 0, 0, yw)
+                self.tello.send_rc_control(0, 0, 0, yw)
                 print("SENCONDS: ############", seconds)
                 self.left(90)
                 sleep(seconds)  # As it is in other thread it keeps flying
 
-            # tello.send_rc_control(0, 0, 0, 0)
+            #self.tello.send_rc_control(0, 0, 0, 0)
 
             try:
 
@@ -161,8 +166,8 @@ class Fly(Turtle):
         print("*************** LAND ********************")
 
         self.keep_recording = False
-        #self.tello.streamoff()
-        #self.tello.land()
+
+        self.tello.land()
 
 
     def abort_mission(self):
@@ -180,9 +185,13 @@ class Fly(Turtle):
 
             cv2.imshow("drone", frame_read)
 
-
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
+                self.tello.land()
+        self.tello.streamoff()
+
+
+
 
 
 

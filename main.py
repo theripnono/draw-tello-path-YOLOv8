@@ -4,7 +4,7 @@ from tkinter import *
 from tkinter import messagebox
 from datetime import datetime
 from grid import Grid
-import json
+import json, os
 from tello import Fly
 
 
@@ -57,9 +57,13 @@ start_pos = t.position()
 t.pendown()
 """######################"""
 
-path=None
+path = None
 
-fly=Fly(path)
+fly = Fly(path)
+
+path_str = "path_commands"
+date_time = now.strftime("%Y-%m-%d")
+date_time = date_time.replace("-", "_")
 
 def tracking(coordinates):
     global path_list, count_rotation
@@ -384,14 +388,16 @@ def undo():
 def to_export():
     global path_list,tracking_coordinates
     path_list.append(tracking_coordinates[1:])
-    yes_no_popup = messagebox.askyesno(title="Export Path", message="Do you want export the drawn path?")
+    yes_no_popup = messagebox.askyesno(title="Export Path", message="Do you want export the drawned path?")
     messagebox.showinfo(title="Your Path will be exported", message=f"{path_list}")
 
-    date_time = now.strftime("%Y-%m-%d")
-    date_time = date_time.replace("-", "_")
+
+
     if yes_no_popup:
-        with open(f"path_list_{date_time}", "w") as path_file:
+
+        with open(f"{path_str}_{date_time}", "w") as path_file:
             json.dump(path_list, path_file)
+
 
 
 def actualpos():
@@ -402,14 +408,23 @@ def actualpos():
 
 def to_fly():
     global path
+
     t.reset()
     t.hideturtle()
-    with open('path_list_2023_08_20', 'r') as json_file:
-        path = json.loads(json_file.read())
+    filename = f"{path_str}_{date_time}"
 
-    start_flying = True
+    if not os.path.isfile(filename):
+        messagebox.showinfo(title="REMEMBER!", message="Remember to export path before start flying")
 
-    fly.start_flying(start_flying, path)
+    else:
+        messagebox.showinfo(title="REMEMBER!", message="Connect to your drone")
+
+        with open(filename, 'r') as json_file:
+            path = json.loads(json_file.read())
+
+        start_flying = True
+
+        fly.start_flying(start_flying, path)
 
 
 """Buttons"""
@@ -449,13 +464,13 @@ button_restart = Button(canvas.master, text="RESTART", command=to_restart, bg=DA
 button_restart.pack()
 button_restart.place(x=670, y=450)
 
-button_export_path = Button(canvas.master, text="EXPORT", command=to_export, bg=DARK_GREY, font=("Arial", 12, "bold"))
+button_export_path = Button(canvas.master, text="SAVE PATH", command=to_export, bg=DARK_GREY, font=("Arial", 12, "bold"))
 button_export_path.pack()
 button_export_path.place(x=670, y=500)
 
 start_flying = Button(canvas.master, text="START FLYING", command=to_fly, bg=DARK_GREY, font=("Arial", 12, "bold"))
 start_flying.pack()
-start_flying.place(x=670, y=600)
+start_flying.place(x=650, y=550)
 
 abort_mission = Button(canvas.master, text="EMERGENCY", command=fly.abort_mission, bg=DARK_GREY, font=("Arial", 12, "bold"))
 abort_mission.pack()
