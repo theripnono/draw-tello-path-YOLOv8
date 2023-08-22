@@ -3,7 +3,7 @@ from turtle import Turtle
 from djitellopy import Tello
 from time import sleep
 from threading import Thread
-
+from ultralytics import YOLO
 
 """
 ********************************** INFORMATION ************************************************************************
@@ -15,6 +15,7 @@ Each iteration will have a time.sleep(seg) to wait the instruction be done.
 
 *********************************************************************************************************************"""
 
+model = YOLO('yolov8_house_items.pt', stream=True)
 
 class Fly(Turtle):
 
@@ -30,6 +31,7 @@ class Fly(Turtle):
         self.exported_path = exported_path
 
         self.tello = Tello()
+
 
 
     def start_flying(self, start, path):
@@ -89,7 +91,7 @@ class Fly(Turtle):
 
         print("******** START THE PATH ********")
         sleep(2)  # wait to initialize the video_recorder
-        #self.tello.takeoff()
+        self.tello.takeoff()
 
         speed = 20
         path_list = full_path[-1]
@@ -101,7 +103,7 @@ class Fly(Turtle):
 
                 seconds = self.to_travel(item["distance"])
 
-                #self.tello.send_rc_control(0, speed, 0, 0)
+                self.tello.send_rc_control(0, speed, 0, 0)
 
                 print("SENCONDS: ############", seconds)
                 sleep(seconds)
@@ -110,7 +112,7 @@ class Fly(Turtle):
 
                 seconds = self.to_travel(item["distance"])
 
-                #self.tello.send_rc_control(0, -speed, 0, 0)
+                self.tello.send_rc_control(0, -speed, 0, 0)
 
                 print("SENCONDS: ############", seconds)
                 sleep(seconds)
@@ -119,7 +121,7 @@ class Fly(Turtle):
 
                 seconds = self.to_travel(item["distance"])
 
-                #self.tello.send_rc_control(speed, 0, 0, 0)
+                self.tello.send_rc_control(speed, 0, 0, 0)
 
                 print("SENCONDS: ############", seconds)
                 sleep(seconds)
@@ -128,7 +130,7 @@ class Fly(Turtle):
 
                 seconds = self.to_travel(item["distance"])
 
-                #self.tello.send_rc_control(-speed, 0, 0, 0)
+                self.tello.send_rc_control(-speed, 0, 0, 0)
 
                 print("SENCONDS: ############", seconds)
                 sleep(seconds)
@@ -138,7 +140,7 @@ class Fly(Turtle):
                 yw = 90
                 seconds = 1
 
-                #self.tello.send_rc_control(0, 0, 0, yw)
+                self.tello.send_rc_control(0, 0, 0, yw)
 
                 print("SENCONDS: ############", seconds)
                 self.right(90)
@@ -154,7 +156,7 @@ class Fly(Turtle):
                 self.left(90)
                 sleep(seconds)  # As it is in other thread it keeps flying
 
-            #self.tello.send_rc_control(0, 0, 0, 0)
+            self.tello.send_rc_control(0, 0, 0, 0)
 
             try:
 
@@ -183,7 +185,11 @@ class Fly(Turtle):
             frame_read = self.tello.get_frame_read().frame
             frame_read = cv2.resize(frame_read, (640, 640))
 
-            cv2.imshow("drone", frame_read)
+            results = model(frame_read)
+
+            annotated_frame = results[0].plot()
+
+            cv2.imshow("DRONE DETECTIONS", annotated_frame)
 
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
