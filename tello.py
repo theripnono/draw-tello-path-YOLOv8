@@ -15,7 +15,7 @@ Each iteration will have a time.sleep(seg) to wait the instruction be done.
 
 *********************************************************************************************************************"""
 
-model = YOLO('yolov8_house_items.pt', stream=True)
+model = YOLO('yolov8_house_items.pt')
 
 class Fly(Turtle):
 

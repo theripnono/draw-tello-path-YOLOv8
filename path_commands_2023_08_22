@@ -1,1 +1,1 @@
-[{"motion": "forward", "distance": 128.0}, {"motion": "rotate_left", "distance": 90}, {"motion": "forward", "distance": -128.0}, {"motion": "rotate_left", "distance": 90}, {"motion": "forward", "distance": -107.0}, [[0, 128.0], [-128.0, 128.0], [-128.0, 21.0]]]
+[{"motion": "forward", "distance": 135.0}, {"motion": "rotate_left", "distance": 90}, {"motion": "forward", "distance": -107.0}, {"motion": "rotate_left", "distance": 90}, {"motion": "forward", "distance": -127.0}, [[0, 135.0], [-107.0, 135.0], [-107.0, 8.0]]]
