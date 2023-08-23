@@ -9,11 +9,12 @@ from ultralytics import YOLO
 ********************************** INFORMATION ************************************************************************
 According to the drone's docs, the speed is 15 cm/s.
 
-The made distance in is in pixels, so we need to create a conversion rate. 
+The distance is in pixels, so we need to create a conversion rate. You can create yours as your convenience
 
 Each iteration will have a time.sleep(seg) to wait the instruction be done.
 
-*********************************************************************************************************************"""
+*********************************************************************************************************************
+"""
 
 model = YOLO('yolov8_house_items.pt')
 
@@ -31,7 +32,6 @@ class Fly(Turtle):
         self.exported_path = exported_path
 
         self.tello = Tello()
-
 
 
     def start_flying(self, start, path):

@@ -7,8 +7,6 @@ from grid import Grid
 import json, os
 from tello import Fly
 
-
-
 GREY = "#d3d3d3"
 DARK_GREY = "#949494"
 GREEN = "#b7d5ac"
@@ -66,13 +64,14 @@ date_time = now.strftime("%Y-%m-%d")
 date_time = date_time.replace("-", "_")
 
 def tracking(coordinates):
-    global path_list, count_rotation
 
     """
     If the arrow rotate it means the drone will rotate so the cardinal axis change.
     Positive rotation count +1 when right click is pressed, negative count -1 when left click is pressed
     4 times rotating it means a complete rotation, so the axis are in the initial pos.
     """
+
+    global path_list, count_rotation
 
     position_dict = {"motion": "", "distance": 0}
     tracking_coordinates.append(coordinates)
@@ -195,8 +194,12 @@ def tracking(coordinates):
                 path_list.append(position_dict)
 
 
-"""Button Logic"""
+"""Buttons Logic"""
+
 def move_on_x():
+    """
+    It appends to the check_list the booleans to only allows to move in X axis
+    """
     global path_list
     move_x = True
     check_list.append(move_x)
@@ -207,6 +210,9 @@ def move_on_x():
 
 
 def move_on_y():
+    """
+    It appends to the check_list the booleans to only allows to move in Y axis
+    """
     global path_list
 
     move_x = False
@@ -218,10 +224,12 @@ def move_on_y():
 
 
 def rotate_left():
+    """
+    It totates 90º the turtle head and the rotation is stored in the path_list.
+    :return: int as cardinal axis position
+    """
     global count_rotation
-    """
-    It totates 90º the turtle head and store the rotation in a list.
-    """
+
     if button_left:
         t.left(90)
         path_list.append({"motion": "rotate_left", "distance": 90})
@@ -232,10 +240,12 @@ def rotate_left():
 
 
 def rotate_right():
-    global count_rotation
     """
     It totates 90º the turtle head and store the rotation in a list.
+    :return: int as cardinal axis position
     """
+    global count_rotation
+
     if button_right:
         t.right(90)
         path_list.append({"motion": "rotate_right", "distance": 90})
@@ -249,8 +259,11 @@ def rotate_right():
 """######################################"""
 
 
-def mouse_draw(x, y):
-
+def mouse_draw(x:float, y:float):
+    """
+    when function is called, it draws the path. The check_list contains boolean list to draw in X axis or Y axis.
+    tracking function is called to get the position
+    """
     if check_list[-1]:
         t.setx(x)
         tracking(t.pos())
@@ -261,6 +274,10 @@ def mouse_draw(x, y):
 
 
 def to_restart():
+    """
+    The function is called when the "restart" button is called. It reset and delete all path list.
+    """
+
     global position_dict, tracking_coordinates, path_list
     t.clear()
     t.penup()
@@ -276,6 +293,11 @@ def to_restart():
 
 
 def make_grid():
+
+    """
+    When "show grid" button is pressed, Grid() object is called and it shows a grid.
+    TODO: if the button is pressed stop drawing instead to wait to draw all the grids.
+    """
     global grid, show_grid
 
     if not grid:
@@ -290,10 +312,15 @@ def make_grid():
 
 
 def erase():
+
+    """
+    A helper function for undo function. It deletes last drawn path.
+    TODO: As the pencolor is white, when the user press undo, a white line is showed. Create a function that takes the
+    color of the background picture.
+    """
+
     global tracking_coordinates, path_list
-    """
-    Erase the drawn line
-    """
+
     try:
         x = tracking_coordinates[-2][0]
         y = tracking_coordinates[-2][1]
@@ -309,6 +336,11 @@ def erase():
 
 
 def last_pos():
+
+    """
+    A helper function for undo function. Instead of delete the pointer goes to the last position.
+    """
+
     global tracking_coordinates, path_list
     try:
         x = tracking_coordinates[-2][0]
@@ -322,6 +354,10 @@ def last_pos():
 
 
 def undo():
+
+    """
+    The purpose of the function is to create a kind of Crtl+Z to correct reverse the mistakes.
+    """
     global tracking_coordinates, check_list
 
     try:
@@ -386,6 +422,9 @@ def undo():
 
 
 def to_export():
+    """
+    It exports the path that the user has done, and it will work as the drone commands.
+    """
     global path_list,tracking_coordinates
     path_list.append(tracking_coordinates[1:])
     yes_no_popup = messagebox.askyesno(title="Export Path", message="Do you want export the drawned path?")
@@ -401,12 +440,19 @@ def to_export():
 
 
 def actualpos():
+    """
+    When the user press "show pos" button, a pop-up it is shown.
+    """
     global tracking_coordinates, path_list
     # messagebox.showinfo(title="Actual Position",message=f"{tracking_coordinates[-1]}")
     messagebox.showinfo(title="Travelled Coordinates", message=f"{tracking_coordinates}")
 
 
 def to_fly():
+
+    """
+    When "start flying" is pressed the start_flying method from the Fly class is called and the dron start flying.
+    """
     global path
 
     t.reset()
