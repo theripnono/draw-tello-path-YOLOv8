@@ -38,14 +38,14 @@ class Fly(Turtle):
 
         if start:
 
-            self.tello.connect()
+            #self.tello.connect()
 
             self.showturtle()
             self.shapesize(2)
             self.left(90)
 
-            recorder = Thread(target=self.video_recorder, daemon=True)
-            recorder.start()
+            #recorder = Thread(target=self.video_recorder, daemon=True)
+            #recorder.start()
 
 
 
@@ -91,7 +91,7 @@ class Fly(Turtle):
 
         print("******** START THE PATH ********")
         sleep(2)  # wait to initialize the video_recorder
-        self.tello.takeoff()
+        #self.tello.takeoff()
 
         speed = 20
         path_list = full_path[-1]
@@ -103,7 +103,7 @@ class Fly(Turtle):
 
                 seconds = self.to_travel(item["distance"])
 
-                self.tello.send_rc_control(0, speed, 0, 0)
+                #self.tello.send_rc_control(0, speed, 0, 0)
 
                 print("SENCONDS: ############", seconds)
                 sleep(seconds)
@@ -112,7 +112,7 @@ class Fly(Turtle):
 
                 seconds = self.to_travel(item["distance"])
 
-                self.tello.send_rc_control(0, -speed, 0, 0)
+                #self.tello.send_rc_control(0, -speed, 0, 0)
 
                 print("SENCONDS: ############", seconds)
                 sleep(seconds)
@@ -156,6 +156,14 @@ class Fly(Turtle):
                 self.left(90)
                 sleep(seconds)  # As it is in other thread it keeps flying
 
+            elif item["motion"] == "up":
+
+                self.tello.send_rc_control(0, 0, speed, 0)
+                seconds = 1
+            elif item["down"] == "down":
+
+                self.tello.send_rc_control(0, 0, -speed, 0)
+                seconds = 1
             self.tello.send_rc_control(0, 0, 0, 0)
 
             try:

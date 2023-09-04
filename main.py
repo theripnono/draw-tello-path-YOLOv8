@@ -10,6 +10,9 @@ from tello import Fly
 GREY = "#d3d3d3"
 DARK_GREY = "#949494"
 GREEN = "#b7d5ac"
+BLUE = "#797EF6"
+PICTIONBLUE = "#1AA7EC"
+WHITE ="#FFFFFF"
 START_POSITION = (-0, 0)  # Drone start position
 
 
@@ -30,6 +33,7 @@ now = datetime.now()
 check_list = [False]
 tracking_coordinates = [START_POSITION]
 position_list = []
+dot_list = []
 
 rotation = ""
 fw_bw = ""
@@ -241,7 +245,7 @@ def rotate_left():
 
 def rotate_right():
     """
-    It totates 90º the turtle head and store the rotation in a list.
+    It rotates 90º the turtle head and store the rotation in a list.
     :return: int as cardinal axis position
     """
     global count_rotation
@@ -255,7 +259,17 @@ def rotate_right():
             count_rotation = 0
         return count_rotation
 
+def up():
+    path_list.append({"motion": "up", "distance": 50})
+    t.dot(20,BLUE)
+    dot_list.append("blue")
+    return dot_list
 
+def down():
+    path_list.append({"motion": "down", "distance": 50})
+    t.dot(20,PICTIONBLUE)
+    dot_list.append("pictionblue")
+    return dot_list
 """######################################"""
 
 
@@ -315,8 +329,7 @@ def erase():
 
     """
     A helper function for undo function. It deletes last drawn path.
-    TODO: As the pencolor is white, when the user press undo, a white line is showed. Create a function that takes the
-    color of the background picture.
+    TODO: As the pencolor is white, when the user press undo, a white line is showed. Create a function that it takes the color of the background picture.
     """
 
     global tracking_coordinates, path_list
@@ -332,7 +345,7 @@ def erase():
         t.pendown()
         t.pencolor("black")
     except IndexError:
-        messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
+        messagebox.showwarning(title="CAUTION!", message="You've not steps in memory")
 
 
 def last_pos():
@@ -358,13 +371,19 @@ def undo():
     """
     The purpose of the function is to create a kind of Crtl+Z to correct reverse the mistakes.
     """
-    global tracking_coordinates, check_list
+    global tracking_coordinates, check_list, dot_list
 
     try:
         tracking_coordinates = tracking_coordinates
         from_pos = tracking_coordinates[-2]
         to_pos = tracking_coordinates[-1]
         moving = to_pos - from_pos
+
+        for dot in dot_list:
+            if len(dot_list) >= 1 and (dot == "blue" or "pictionblue"):
+                t.dot(20,WHITE)
+                dot_list.pop(-1)
+
 
         if moving[0] == 0 and moving[-1] > 0:  # moving on y positive axis
             if tracking_coordinates[-1][-1] > 0:  # checking if positive
@@ -418,7 +437,7 @@ def undo():
 
 
     except IndexError:
-        messagebox.showwarning(title="CAUTION!", message="You've not done more steps in memory")
+        messagebox.showwarning(title="CAUTION!", message="You've not steps in memory")
 
 
 def to_export():
@@ -494,9 +513,17 @@ button_x = Button(canvas.master, text="X Axis", command=move_on_x, bg=GREY)
 button_x.pack()
 button_x.place(x=670, y=200)
 
+button_up = Button(canvas.master, text="Up", command=up, bg=GREY)
+button_up.pack()
+button_up.place(x=735, y=199)
+
 button_y = Button(canvas.master, text="Y Axis", command=move_on_y, bg=GREEN)
 button_y.pack()
 button_y.place(x=670, y=250)
+
+button_down = Button(canvas.master, text="Down", command=down, bg=GREY)
+button_down.pack()
+button_down.place(x=735, y=250)
 
 button_undo = Button(canvas.master, text="Undo", command=undo, bg=GREY)
 button_undo.pack()
